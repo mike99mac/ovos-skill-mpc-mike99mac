@@ -1,0 +1,8 @@
+{
+    "expected_dialog": "emby",
+    "intent": {
+        "song": "anySongHere"
+    },
+    "intent_type": "emby.intent",
+    "utterance": "play song anySongHere from emby"
+}
