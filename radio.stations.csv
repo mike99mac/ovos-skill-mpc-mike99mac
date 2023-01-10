@@ -1,0 +1,103 @@
+"main flac",                 "pop",                 http://stream.radioparadise.com/flac
+"mellow mix flac",           "easy listening",      http://stream.radioparadise.com/mellow-flac
+"rock mix flac",             "rock",                http://stream.radioparadise.com/rock-flac
+"world/eclectic mix",        "electronic",          http://stream.radioparadise.com/eclectic-flac
+"fréquence 3 dance",         "dance",               https://frequence3.net-radio.fr/frequence3dance.flac
+"fréquence 3 urban",         "hip hop, rap",        https://frequence3.net-radio.fr/frequence3urban.flac
+"fréquence 3 world",         "pop",                 https://frequence3.net-radio.fr/frequence3world.flac
+"h2o",                       "various",             http://ice2.ikoula.net-radio.fr/h2oradio.flac
+"hi on line radio",          "pop",                 http://mscp2.live-streams.nl:8100/flac.flac
+"intense radio",             "electronic",          http://secure.live-streams.nl/flac.flac
+"jb radio-2",                "blues",               https://maggie.torontocast.com:8076/flac
+"joy hits",                  "pop",                 http://joyhits.online/joyhits.flac.ogg
+"magic radio",               "oldies",              http://mp3.magic-radio.net/flac
+"maxxima",                   "electronic",          http://maxxima.mine.nu:8000/maxx.ogg
+"mother earth eclectic",     "eclectic",            http://server9.streamserver24.com:18900/motherearth
+"mother earth instrumental", "instrumental",        http://server9.streamserver24.com:18920/motherearth.instrumental
+"mother earth classical",    "classical",           http://server9.streamserver24.com:18910/motherearth.klassik
+"classical station",         "classical",           http://174.36.206.197:8000 
+"naim jazz",                 "jazz",                https://mscp3.live-streams.nl:8342/jazz-flac.flac
+"naim radin",                "various",             https://mscp3.live-streams.nl:8362/flac.flac
+"pureclassix",               "80s",                 http://mscp4.live-streams.nl:8140/flac.ogg
+"audiomastering",            "electronic",          http://radio.audiomastering.lt:8000/pure
+"bias",                      "70s-2000s",           https://admin.biasradio.com/radio/8000/flac
+"radio blues",               "blues",               http://streams.radiomast.io:80/radioblues-flac
+"calico",                    "pop",                 https://radio3.radio-calico.com:8443/calico
+"juventus",                  "latino",              https://radiojuventus.hu/juventus_flac.m3u
+"kemonia",                   "80s and 90s",         http://kemoniastreaming2.net:8060/stream
+"paradise",                  "rock",                http://stream.radioparadise.com/rock-flac
+"95bfm",                     "alternative",         http://streams.95bfm.com/stream112
+"sputnic",                   "new wave",            http://radiosputnik.nl:8002/flac
+"rondo klasu",               "classical",           http://rondo.iradio.fi:8000/klasupro.flac
+"sector progressive",        "progressive",         http://89.223.45.5:8000/progressive-flac
+"sector space",              "electronic",          http://89.223.45.5:8000/space-flac
+"sector 80s",                "80s",                 http://89.223.45.5:8000/geny-flac
+"sector 90s",                "90s",                 http://89.223.45.5:8000/next-flac
+"sector 10s",                "2010s",               http://89.223.45.5:8000/zed-flac
+"sing sing",                 "eclectic",            http://stream.sing-sing-bis.org:8000/singsingflacsansmetadata
+"sun",                       "various",             http://diffusion.lafrap.fr:8000/sun.flac
+"radio paradise",            "pop",                 http://stream-uk1.radioparadise.com/aac-320
+"bbc",                       "news",                http://stream.live.vc.bbcmedia.co.uk/bbc_world_service 
+"mango radio",               "german",              http://stream.mangoradio.de/ 
+"france info",               "french",              http://direct.franceinfo.fr/live/franceinfo-midfi.mp3 
+"nineties superhits",        "90s",                 http://103.16.47.70:7444/stream
+"classic viynl",             "oldies",              https://icecast.walmradio.com:8443/classic 
+"bbc 4",                     "news",                http://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm 
+"one live",                  "country",             http://wdr-1live-live.icecast.wdr.de/wdr/1live/live/mp3/128/stream.mp3 
+"1980s zoom",                "80s",                 "https://samcloud.spacial.com/api/listen?sid=111415&rid=194939&f=mp3,any&br=128000,any&m=sc"
+"christmas vinyl",           "christmas",           https://icecast.walmradio.com:8443/christmas 
+"adroit",                    "jazz",                https://icecast.walmradio.com:8443/jazz 
+"kiss 98",                   "pop",                 http://icecast2.play.cz:8000/kiss128aac 
+"90s super hits",            "indian",              http://103.16.47.70:7222/;stream.mp3 
+"walm",                      "oldies",              https://icecast.walmradio.com:8443/otr
+"cadena",                    "spanish",             http://playerservices.streamtheworld.com/api/livestream-redirect/CADENASER.mp3 
+"walm hd",                   "christian",           https://icecast.walmradio.com:8443/walm 
+"classic fm uk",             "classical",           http://ice-the.musicradio.com/ClassicFMMP3 
+"soma fm",                   "mellow",              http://ice3.somafm.com/groovesalad-128-mp3
+"beatles",                   "beatles",             http://www.beatlesradio.com:8000/stream/1/ 
+"105",                       "italian",             http://icecast.unitedradio.it/Radio105.mp3 
+"hit fm",                    "ukranian",            http://195.95.206.17/HitFM 
+"outlaw country",            "country",             http://ice10.outlaw.fm/KIEV2 
+"bbc 2",                     "pop",                 http://stream.live.vc.bbcmedia.co.uk/bbc_radio_two 
+"disco funk",                "disco",               https://radiopanther.radiolebowski.com/play 
+"rock antenna",              "heavy metal",         http://mp3channels.webradio.rockantenne.de/heavy-metal 
+"voice of america",          "pop",                 http://voa-28.akacast.akamaistream.net/7/54/322040/v1/ibb.akacast.akamaistream.net/voa-28 
+"80s on dash",               "80s",                 http://ice55.securenetsystems.net/DASH7 
+"big 80s",                   "80s",                 http://158.69.114.190:8065/; 
+"talk sport",                "UK sports",           http://radio.talksport.com/stream?aisGetOriginalStream=true 
+"express",                   "ukranian",            http://195.168.61.226:8000/96.mp3 
+"disco studio 54",           "disco",               http://149.56.147.197:8307/stream?1516542990510 
+"181 fm",                    "hip hop",             http://listen.181fm.com/181-oldschool_128k.mp3 
+"funky radio",               "funk",                https://funkyradio.streamingmedia.it/play.mp3 
+"lounge fm",                 "mellow",              http://cast.loungefm.com.ua/chillout128?1410329190824.mp3 
+"npr news",                  "news",                http://npr-ice.streamguys1.com/live.mp3 
+"capital fm london",         "pop",                 http://media-ice.musicradio.com/CapitalMP3 
+"fun radio",                 "slovakian",           http://stream.funradio.sk:8000/fun128.mp3 
+"saudades",                  "brazilian",           http://stream.zeno.fm/aye8zg6wm8quv
+"deep house",                "electronic",          http://strm112.1.fm/deephouse_mobile_mp3 
+"heart london",              "pop",                 http://ice-sov.musicradio.com/HeartLondonMP3  
+"the jazz groove",           "jazz",                http://east-mp3-128.streamthejazzgroove.com/stream 
+"cnn",                       "news",                https://tunein.streamguys1.com/fallback-cnnembed 
+"nbc",                       "news",                http://stream.revma.ihrhls.com/zc6043 
+"happy christmas radio",     "christmas",           https://listen.happychristmasradio.net/ 
+"paradise rock",             "rock",                http://stream.radioparadise.com/rock-320 
+"radio caroline",            "pop",                 http://78.129.202.200:8040/; 
+"cryosleep",                 "mellow",              http://streams.echoesofbluemars.org:8000/cryosleep 
+"bbc 1",                     "pop",                 http://stream.live.vc.bbcmedia.co.uk/bbc_radio_one 
+"soma fm secret agent",      "jazz",                http://ice.somafm.com/secretagent
+"classic rock replay",       "classic rock",        http://strm112.1.fm/crock_mobile_mp3 
+"love radio",                "70s 80s 90s",         http://shoutcast3.streamingmedia.it:3162/ 
+"soft rock radio",           "soft rock",           http://softrock-ice.purestream.net/softrock.mp3 
+"rnb and hip hop",           "hip hop",             http://192.99.41.102:5429/ 
+"big r radio",               "heavy metal",         http://bigrradio.cdnstream1.com/5186_128 
+"soma fm pop tron",          "electronic",          http://ice3.somafm.com/poptron-128-mp3 
+"bbc 3",                     "classical",           https://stream.live.vc.bbcmedia.co.uk/bbc_radio_three 
+"beautiful instrumentals",   "instrumentals",       http://s3.voscast.com:10038/ 
+"rockabilly radio",          "rockabilly",          http://lin3.ash.fast-serv.com:6026/stream_96 
+"102.7 kiss fm",             "top 40",              https://stream.revma.ihrhls.com/zc185 
+"3 fm",                      "pop",                 http://icecast.omroep.nl/3fm-bb-mp3 
+"trance fm",                 "electronic",          https://trance-high.rautemusik.fm
+"radio rocks",               "classic rock",        http://online.radioroks.ua/RadioROKS_Ballads_HD 
+"classic rock 105.1",        "classic rock",        https://live.wostreaming.net/manifest/townsquare-kftefmaac-ibc3 
+"radio paradise",            "soft rock",           http://stream.radioparadise.com/mellow-320 
+"", "", 
