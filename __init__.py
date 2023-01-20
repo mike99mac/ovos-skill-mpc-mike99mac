@@ -39,6 +39,7 @@ class Mpc(CommonPlaySkill):
     """
     utterance = str(message.data["utterance"])
     self.log.log(20, "handle_playlists(): utterance = "+utterance) 
+    self.stop()                            # stop any music playing
     mesg_info = []
     mesg_file, mesg_info = self.mpc_client.manipulate_playlists(utterance)
     if [ mesg_file != None ]:              # there is a reply to speak
@@ -59,6 +60,7 @@ class Mpc(CommonPlaySkill):
 
     self.music_info = self.mpc_client.parse_radio(utterance)
     if [ self.music_info.mesg_file != None ]:         # there is a reply to speak
+      self.log.log(20, "handle_radio(): mesg_file = "+self.music_info.mesg_file+" mesg_info = "+str(self.music_info.mesg_info)) 
       self.speak_dialog(self.music_info.mesg_file, self.music_info.mesg_info, wait=True) # speak the message 
     if self.mpc_client.mpc_cmd("play") != True: # error playing music
       self.log.log(20, "handle_radio(): self.mpc_client.mpc_cmd(play) failed")  
@@ -87,8 +89,12 @@ class Mpc(CommonPlaySkill):
         Returns: tuple (matched phrase(str), match level(CPSMatchLevel), but no optional data(dict))
                  or None if no match was found.
         """    
+    # first stop playing music
+    self.stop()
+
     # parse the phrase and find the music
-    self.log.log(20, "CPS_match_query_phrase() searching for phrase = "+phrase)
+    self.log.log(20, "CPS_match_query_phrase() extending timeout first - search for = "+phrase)
+    self.CPS_extend_timeout(10)            # don't let speaking message cause a timeout
     self.music_info = self.mpc_client.parse_common_phrase(phrase)  
     self.log.log(20, "CPS_match_query_phrase() match_type = "+str(self.music_info.match_type))
     self.log.log(20, "CPS_match_query_phrase() mesg_file = "+self.music_info.mesg_file)
@@ -96,22 +102,21 @@ class Mpc(CommonPlaySkill):
     self.log.log(20, "CPS_match_query_phrase() track_files = "+str(self.music_info.track_files))
 
     # speak the message
-    self.CPS_extend_timeout()              # don't let speaking message cause a timeout
+    self.CPS_extend_timeout(10)            # don't let speaking message cause a timeout
     self.log.log(20, "CPS_match_query_phrase() calling speak.dialog")  
     self.speak_dialog(self.music_info.mesg_file, self.music_info.mesg_info, wait=True) # speak the message  
 
-    if len(self.music_info.track_files) > 0: # music was found
-      if self.mpc_client.mpc_cmd("play") != True:
-        self.log.error(20, "CPS_match_query_phrase() - self.mpc_client.mpc_cmd(play) failed")
-      tracks_logged = 0
-      for track in self.music_info.track_files: # log first three tracks on the queue
-        self.log.log(20, "CPS_match_query_phrase() track = "+str(track))
-        tracks_logged = tracks_logged + 1
-        if tracks_logged >= 3:
-          break
-      return phrase, CPSMatchLevel.EXACT, {}
-    else:                                  # no music found
+    if self.music_info.track_files == None: # no music was found
       return None
+    if self.mpc_client.mpc_cmd("play") != True:
+      self.log.error(20, "CPS_match_query_phrase() - self.mpc_client.mpc_cmd(play) failed")
+    tracks_logged = 0
+    for track in self.music_info.track_files: # log first three tracks on the queue
+      self.log.log(20, "CPS_match_query_phrase() track = "+str(track))
+      tracks_logged = tracks_logged + 1
+      if tracks_logged >= 3:
+        break
+    return phrase, CPSMatchLevel.EXACT, {}
 
 def create_skill():
     return Mpc()

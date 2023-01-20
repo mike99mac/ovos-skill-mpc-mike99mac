@@ -31,16 +31,28 @@ class MpcClient():
   mpc_rc: str                              # return code from last mpc call
   station_name: str                   
   station_genre: str  
+  # station_country: str  
+  # station_language: str 
+  # station_ads: str    
   station_URL: str 
+  request_type: str                        # "genre", "country", "language", "random" or "next_station"
+  list_lines: list                         # all radio stations in the CSV file
+  next_indices: list                       # indices matching current request type
   
   def __init__(self, music_dir: Path):
     self.log = logging.getLogger(__name__)
     self.music_dir = music_dir
     self.max_tracks = 50                   
     self.mpc_rc = "none"                       
-    self.station_name = "none"                   
-    self.station_genre = "none" 
-    self.station_URL = "none"   
+    self.station_name = "unknown"                   
+    self.station_genre = "unknown"
+    # self.station_country = "unknown"
+    # self.station_language = "unknown"
+    # self.station_ads = "unknown" 
+    self.station_URL = "unknown"  
+    self.request_type = "unknown"  
+    self.list_lines = []
+    self.next_indices = []                 # no next station to start
 
   def initialize(self, music_dir: Path):  
     """ 
@@ -56,7 +68,7 @@ class MpcClient():
   def restart_mpd(self):
     """ 
     Restart the mpd service   
-    Should not need to do this, but the pulseaudio connection is not solid
+    Hopefully this will not be necessary, but the pulseaudio connection is sometimes not solid
     Return: True or False 
     """
     cmd = "sudo /usr/sbin/service mpd restart"
@@ -79,7 +91,7 @@ class MpcClient():
     Return: True or False 
     """
     self.log.log(20, "mpc_cmd(): arg1 = "+arg1+" arg2 = "+str(arg2))
-    cmd = "/usr/bin/mpc -h 127.0.0.1 "+arg1
+    cmd = "/usr/bin/mpc "+arg1
     if arg2 != None:     
       cmd = cmd+" "+arg2
     try:
@@ -88,19 +100,18 @@ class MpcClient():
       self.log.log(20, "mpc_cmd(): result: "+str(result))
     except subprocess.CalledProcessError as e:    
       self.mpc_rc = str(e.returncode)
-      self.log.log(20, "mpc_cmd(): command "+cmd+" returned: "+self.mpc_rc+" restarting mpd and trying again...")
-    except:    
-      self.log.log(20, "mpc_cmd(): command "+cmd+" returned: "+self.mpc_rc+" restarting mpd and trying again...")
-      if self.restart_mpd() != True:
-         self.log.log(20, "mpc_cmd(): restart_mpd() failed")
-         return False 
-      try:
-        self.log.log(20, "mpc_cmd(): running command: "+cmd)
-        result = subprocess.check_output(cmd, shell=True) 
-      except subprocess.CalledProcessError as e:      
-        self.mpc_rc = str(e.returncode)
-        self.log.log(20, "mpc_cmd(): command "+cmd+" failed again - returned: "+self.mpc_rc)
-        return False
+      # restarting mpd is not working :((
+      # self.log.log(20, "mpc_cmd(): command "+cmd+" returned: "+self.mpc_rc+" restarting mpd and trying again...")
+      # if self.restart_mpd() != True:
+      #    self.log.log(20, "mpc_cmd(): restart_mpd() failed")
+      #    return False 
+      # try:
+      #   self.log.log(20, "mpc_cmd(): running command: "+cmd)
+      #   result = subprocess.check_output(cmd, shell=True) 
+      # except subprocess.CalledProcessError as e:      
+      #   self.mpc_rc = str(e.returncode)
+      #   self.log.log(20, "mpc_cmd(): command "+cmd+" failed again - returned: "+self.mpc_rc)
+      #   return False
     self.log.log(20, "mpc_cmd(): returning True at bottom")    
     return True  
 
@@ -162,19 +173,18 @@ class MpcClient():
     else:
       seconds = int(parts[0])
     return (hours * 60 * 60) + (minutes * 60) + seconds
-
-  # Music playing vocabulary:
-  # play {music_name}
-  # play (track|song|title|) {track} by (artist|band|) {artist}
-  # play (album|record) {album} by (artist|band) {artist}
-  # play (any|all|my|random|some|) music 
-  # play (playlist) {playlist}
-  # play (genre) {genre}     
-  #
+  
   def parse_common_phrase(self, phrase):
     """
     Perform "brute force" parsing of a music play request
-    Returns: Music_info object 
+    Music playing vocabulary:
+      play (track|song|title|) {track} by (artist|band|) {artist}
+      play (album|record) {album} by (artist|band) {artist}
+      play (any|all|my|random|some|) music 
+      play (playlist) {playlist}
+      play (genre) {genre}     
+    Returns: Music_info object
+
     """
     artist_name = "unknown_artist"
     found_by = "yes"                     # assume "by" is in the phrase
@@ -520,16 +530,21 @@ class MpcClient():
         ret_val = Music_info(None, None, None, None)      
     return ret_val
 
-  # Vocabulary for manipulating playlists:
-  #   (create|make) playlist {playlist} from track {track}
-  #   (delete|remove) playlist {playlist}
-  #   add (track|song|title) {track} to playlist {playlist}
-  #   add (album|record) {album} to playlist {playlist}
-  #   (remove|delete) (track|song|title) {track} from playlist {playlist}
-  #   (remove|delete) (album|record) {album} from playlist {playlist}
-  #
-  # return: file name of .dialog file (str) to speak and data to be added (dict)
   def manipulate_playlists(self, utterance):
+    """
+    List, create, add to, remove from and delete playlists
+    Vocabulary for manipulating playlists:
+      (create|make) playlist {playlist} from track {track}
+      (delete|remove) playlist {playlist}
+      add (track|song|title) {track} to playlist {playlist}
+      add (album|record) {album} to playlist {playlist}
+      (remove|delete) (track|song|title) {track} from playlist {playlist}
+      (remove|delete) (album|record) {album} from playlist {playlist}
+      list (my|) playlists
+      what playlists (do i have|are there)
+      what are (my|the) playlists
+    return: file name of .dialog file (str) to speak and data to be added (dict)
+    """
     self.log.log(20, "manipulate_playlists() called with utterance: "+utterance) 
     words = utterance.split()            # split request into words
     match words[0]:                      
@@ -555,9 +570,10 @@ class MpcClient():
         phrase = words[1:]               # delete first word
         phrase = " ".join(phrase)        # convert to string
         mesg_file, mesg_info = self.add_to_playlist(music_type, phrase) 
+      case "list"|"what":  
+        mesg_file, mesg_info = self.list_playlists()
     self.log.log(20, "manipulate_playlists() returned: "+mesg_file+" and "+str(mesg_info))
     return mesg_file, mesg_info
-
 
   def get_playlist(self, playlist_name):
     """
@@ -766,66 +782,150 @@ class MpcClient():
     # TODO: finish code
     return "ok_its_done", {}
 
-  def get_station(self, radio_type, radio_name):
+  def list_playlists(self):
     """
-    Play a radio station by genre, station name, or a random one
-    param: radio_type: "random", "genre", or "station"
-           radio_name: genre or station name (None for random)
+    List all saved playlists
+    Return: mesg_file (str), mesg_info (dict)  
+    """
+    self.log.log(20, "top of list_playlists()")
+    cmd = ["/usr/bin/mpc ", "lsplaylists"]
+    self.log.log(20, "list_playlists(): running command: "+str(cmd))
+    playlists = {}
+    rc = 0
+    try:
+      process = subprocess.check_output("/usr/bin/mpc lsplaylists", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      output, err = process.communicate() 
+      rc = process.returncode 
+      playlists = str(output)
+      self.log.log(20, "list_playlists(): playlists = "+playlists+" rc = "+str(rc))
+    except:
+      self.log.log(20, "list_playlists(): return code: "+str(rc))
+    if len(playlists) == 0:
+      mesg_info={}
+      return "playlists_not_found", mesg_info
+    else:  
+      mesg_info = {"playlists": playlists}  
+      return "list_playlists", mesg_info 
+
+  def get_next_station(self):
+    """
+    get next radio stations by genre, country, or language
+    Return: index of station    
+    """
+    self.log.log(20, "get_next_station() self.request_type = "+self.request_type)     
+    num_matches = len(self.next_indices)
+    if num_matches == 0:                   # no previous request of genre, country or language 
+      self.request_type = "random" 
+      index = random.randrange(num_lines)  # choose a random station
+    if num_matches == 1:                   # there is no next station
+      self.log.log(20, "get_station() only one station matches request - forcing to random")
+      self.request_type = "random" 
+      index = random.randrange(num_lines)  # choose a random station
+    else:      
+      match_index = random.randrange(num_matches)  # index for list of stations matching request
+      index = self.next_indices[match_index]       # index for list of all stations
+    return index
+
+  def get_matching_station(self, field_index, search_name):
+    """
+    Search for radio stations by genre, country, or language
+    param: field_index: field number to search on 
+           search_name: station, genre, language or country to search for
+    Return: index of station or -1 when not found   
+    """
+    self.log.log(20, "get_matching_station() field_index: "+str(field_index)+" search_name = "+search_name)
+    self.next_indices = []             # reset list of station indexes that match
+    num_hits = 0
+    index = 0
+    for next_line in self.list_lines:
+      # self.log.log(20, "get_station() next_line[1] = "+str(next_line[1].strip()))
+      if search_name in next_line[field_index].strip():
+        self.next_indices.append(index)     # save index of match
+        num_hits += 1
+      index += 1  
+    if num_hits == 0:                      # music not found
+      self.log.log(20, "get_matching_station() did not find "+self.request_type+" "+search_name+" in field number "+str(field_index)) 
+      return -1                 
+    self.log.log(20, "get_matching_station() self.next_indices = "+str(self.next_indices))
+    matching_index = random.randrange(num_hits) # choose a random station if multiple hits
+    return self.next_indices[matching_index] # index of a random matching station
+
+  def get_station(self, search_name):
+    """
+    Play a radio station by genre, country, language, station name, or a random one
+    param: search_name: item to search for 
     Return: music_info object  
     """
-    self.log.log(20, "get_station() radio_type: "+radio_type+" radio_name = "+radio_name)
+    self.log.log(20, "get_station() self.request_type: "+self.request_type+" search_name = "+search_name)
     input_file = open("/opt/mycroft/skills/mpc-skill-mike99mac/radio.stations.csv", "r+")
     reader_file = csv.reader(input_file)
-    list_lines = list(reader_file)         # convert to list
-    num_lines = len(list_lines)            # number of saved radio stations
+    self.list_lines = list(reader_file)    # convert to list
+    num_lines = len(self.list_lines)            # number of saved radio stations
     self.log.log(20, "get_station() num_lines = "+str(num_lines))
     mesg_info = {}
-    match radio_type:
-      case "random":
-        index = random.randrange(num_lines) # choose a random station
-        mesg_info = {"word1": "random", "word2": "station"}
-      case "genre":
-        matching_indices = []              # list of station indexes that match
-        num_hits = 0
-        index = 0
-        for next_line in list_lines:
-          if next_line[1] == radio_name:
-            matching_indices.append(index) # save index of match
-            num_hits += 1
-        if num_hits == 0:                  # genre not found
-          self.log.log(20, "get_station() did not find genre "+radio_name) 
-          mesg_info = {"radio_type": radio_type, "radio_name": radio_name}
-          return "radio_not_found", mesg_info
-        matching_index = random.randrange(num_hits) # choose a random station if multiple hits
-        index = matching_indices[matching_index] 
-        mesg_info = {"word1": "genre", "word2": radio_name}
-      case "station":
-        for next_line in list_lines:
-          if next_line[1] == radio_name:   # found requested station
-            self.log.log(20, "get_station() TODO: get station "+radio_name)  
-        mesg_info = {"word1": "station", "word2": radio_name}
-    
+    track_files = []
+    index = -1
+    if search_name == "next_station":
+      index = self.get_next_station()
+    else:  
+      match self.request_type:
+        case "random":
+          index = random.randrange(num_lines) # choose a random station 
+          mesg_file = "playing_radio"  
+          mesg_info = {"station_name": self.station_name, "station_genre": self.station_genre.replace("|", " or " )}
+        case "genre":
+          self.log.log(20, "get_station() searching for station by genre "+search_name) 
+          index = self.get_matching_station(1, search_name)
+          if index == -1:                    # station not found
+            self.log.log(20, "get_station() did not find genre "+search_name) 
+            mesg_info = {"request_type": self.request_type, "search_name": search_name}
+            return Music_info("song", "radio_not_found", mesg_info, track_files)
+        case "country":
+          self.log.log(20, "get_station() searching for station from country "+search_name) 
+          index = self.get_matching_station(2, search_name)
+          if index == -1:                    # country not found
+            self.log.log(20, "get_station() did not find country "+search_name) 
+            mesg_info = {"country": search_name}
+            return Music_info("song", "country_not_found", mesg_info, track_files)
+        case "language":
+          self.log.log(20, "get_station() searching for station in language "+search_name) 
+          index = self.get_matching_station(3, search_name)
+          if index == -1:                    # language not found
+            self.log.log(20, "get_station() did not find language "+search_name) 
+            mesg_info = {"language": search_name}
+            return Music_info("song", "language_not_found", mesg_info, track_files)  
+        case "station":
+          self.log.log(20, "get_station() searching for station named "+search_name) 
+          index = self.get_matching_station(0, search_name)
+          if index == -1:                    # station not found
+            self.log.log(20, "get_station() did not find language "+search_name) 
+            mesg_info = {"language": search_name}
+            return Music_info("song", "country_not_found", mesg_info, track_files)
+
     # clear the playlist
-    # if self.mpc_cmd("clear") != True:      # mpc failed
-    #   self.log.log(20, "get_station() self.mpc_cmd(clear) failed")
-    #   mesg_info = {"return_code": self.mpc_rc}
-    #   return "bad_mpc_rc", mesg_info   
+    if self.mpc_cmd("clear") != True:      # mpc failed
+      self.log.log(20, "get_station() self.mpc_cmd(clear) failed")
+      mesg_info = {"return_code": self.mpc_rc}
+      return "bad_mpc_rc", mesg_info   
 
     # add the radio station to the playlist
-    self.station_name = list_lines[index][0].strip()
-    self.station_genre = list_lines[index][1].strip()
-    self.station_URL =  list_lines[index][2].strip()
-    self.station_URL = '"'+self.station_URL+'"' # surround URL with double quotes
+    # self.index = index
+    self.log.log(20, "get_station() index = "+str(index))
+    self.station_name = self.list_lines[index][0].strip()
+    self.station_genre = self.list_lines[index][1].strip()
+    # self.station_country = list_lines[index][2].strip()
+    # self.station_language = list_lines[index][3].strip()
+    # self.station_ads = list_lines[index][4].strip()
+    self.station_URL =  self.list_lines[index][5].strip()
     self.log.log(20, "get_station() adding station "+self.station_URL)
     if self.mpc_cmd("add", self.station_URL) != True: # mpc failed
       self.log.log(20, "get_station() self.mpc_cmd(add, "+self.station_URL+"} failed")
       mesg_info = {"return_code": self.mpc_rc}
       return "bad_mpc_rc", mesg_info    
-    mesg_info = {"station_name": self.station_name, "station_genre": self.station_genre}  
+    mesg_info = {"station_name": self.station_name, "station_genre": self.station_genre.replace("|", " or ")}  
     track_files = []
     track_files.append(self.station_URL)
-    ret_val = Music_info("song", "playing_radio", mesg_info, track_files)
-    return ret_val      
+    return Music_info("song", "playing_radio", mesg_info, track_files)
 
   def parse_radio(self, utterance):
     """
@@ -837,41 +937,64 @@ class MpcClient():
       play genre {genre} (on the|on my|) radio
       play station {station} (on the|on my|) radio
       play (the|) (radio|) station {station}
+      play (the|) radio (from|from country|from the country) {country}
+      play (the|) radio (spoken|) (in|in language|in the language) {language}
       play (another|a different|next) (radio|) station
       (different|next) (radio|) station
     Return: mesg_file (str), mesg_info (dict)  
     """
     self.log.log(20, "parse_radio() utterance: "+utterance)  
-
-    # parse the request - first remove unnecessary words
-    utterance = utterance.replace('on the ', '')
+    utterance = utterance.replace('on the ', '') # remove unnecessary words
     utterance = utterance.replace('on my ', '')
     utterance = utterance.replace('the ', '')
+    utterance = utterance.replace(' a ', ' ')
     self.log.log(20, "parse_radio() cleaned up utterance: "+utterance)  
     words = utterance.split()            # split request into words
+    num_words = len(words)
     intent = "None"
-    radio_name = "None" 
+    search_name = "None" 
     match words[0]:                      
       case "different" | "next":  
-        intent = "random"
+        self.log.log(20, "parse_radio() find next station - this.request_type = "+self.request_type)
+        if self.request_type in "genre|country|language": # get next station of this type
+          search_name = "next_station"
+        else:  
+          self.request_type = "random"
       case "play":      
         match words[1]:
           case "radio":
-            if len(words) == 3 and words[2] == "station":
-              intent = station
-              radio_name = words[3]
+            if words[2] == "station":
+              if num_words == 3:
+                self.request_type = "random"
+              elif words[3] == "from":
+                self.request_type = "country"
+                search_name = words[4]   
+              else:
+                self.request_type = "station"
+                search_name = words[3]
+            elif words[2] == "from":
+              self.request_type = "country"
+              search_name = words[3]   
+            elif words[2] == "spoken" or words[2] == "in":
+              self.request_type = "language"
+              search_name = words[3]     
             else: 
-              intent = "random" 
-          case "music":
-            intent = "random"
+              self.request_type = "random" 
+          case "music"|"any":
+            self.request_type = "random"
           case "genre":
-            intent = "genre"
-            radio_name = words[2]
+            self.request_type = "genre"
+            search_name = words[2]
           case "station":
-            intent = "station" 
-            radio_name = words[2]       
+            self.request_type = "station" 
+            search_name = words[2]       
+          case other:
+            if words[2] == "radio" or words[2] == "station": 
+               self.request_type = "genre"
+               search_name = words[1]
+            else:
+              self.request_type = "random"
     mesg_info = {}        
-    music_info = self.get_station(intent, radio_name) 
+    music_info = self.get_station(search_name) 
     return music_info
      
-        
