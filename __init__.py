@@ -19,13 +19,15 @@ class Mpc(CommonPlaySkill):
     super().__init__(name="LocalMusicSkill")
 
   def initialize(self):
-    music_info = Music_info("", "", {}, []) # music to play 
+    self.music_info = Music_info("none", "", {}, []) # music to play 
     self._audio_session_id: Optional[str] = None
     self._stream_session_id: Optional[str] = None
     self._is_playing = False
     self.audio_service = None
     self.mpc_client = MpcClient("/media/") # search for music under /media
     self.device_id = hashlib.md5(('Mpc'+DeviceApi().identity.uuid).encode()).hexdigest()
+    self.bus.on('mycroft.audio.service.next', self.handle_next)
+    self.bus.on('mycroft.audio.service.prev', self.handle_prev)
 
   def speak_playing(self, media):
     data = dict()
@@ -53,25 +55,43 @@ class Mpc(CommonPlaySkill):
     """
     utterance = str(message.data["utterance"])
     self.log.log(20, "handle_radio(): utterance = "+utterance) 
-    if self.mpc_client.mpc_cmd("clear") != True:      # mpc failed
-      self.log.error(20, "get_station() self.mpc_cmd(clear) failed")
-      mesg_info = {"return_code": self.mpc_rc}
-      return "bad_mpc_rc", mesg_info   
+#   if self.mpc_client.mpc_cmd("clear") != True:      # mpc failed
+#     self.log.error(20, "get_station() self.mpc_cmd(clear) failed")
+#     mesg_info = {"return_code": self.mpc_rc}
+#     return "bad_mpc_rc", mesg_info   
 
     self.music_info = self.mpc_client.parse_radio(utterance)
-    if [ self.music_info.mesg_file != None ]:         # there is a reply to speak
-      self.log.log(20, "handle_radio(): mesg_file = "+self.music_info.mesg_file+" mesg_info = "+str(self.music_info.mesg_info)) 
-      self.speak_dialog(self.music_info.mesg_file, self.music_info.mesg_info, wait=True) # speak the message 
-    if self.mpc_client.mpc_cmd("play") != True: # error playing music
-      self.log.log(20, "handle_radio(): self.mpc_client.mpc_cmd(play) failed")  
+    match self.music_info.match_type:
+      case "next"|"prev":
+        self.mpc_client.mpc_cmd(self.music_info.match_type)
+      case _:
+        if [ self.music_info.mesg_file != None ]:   # there is a reply to speak
+          self.log.log(20, "handle_radio(): mesg_file = "+self.music_info.mesg_file+" mesg_info = "+str(self.music_info.mesg_info)) 
+          self.speak_dialog(self.music_info.mesg_file, self.music_info.mesg_info, wait=True) # speak the message 
+        if self.mpc_client.mpc_cmd("play") != True: # error playing music
+          self.log.log(20, "handle_radio(): self.mpc_client.mpc_cmd(play) failed")  
 
   def stop(self):
     """ 
-    Stop playback - called by the playback control skill 
+    Stop playback with "mpc clear" - called by the playback control skill 
     """
     self.log.log(20, "stop() - stopping music")
     if self.mpc_client.mpc_cmd("clear") != True:
       self.log.error(20, "stop() - self.mpc_client.mpc_cmd(clear) failed")
+
+  def handle_prev(self, message):
+    """
+    Play previous track or station
+    """
+    self.log.log(20, "handle_prev() - calling mpc_client.mpc_cmd(prev)") 
+    self.mpc_client.mpc_cmd("prev")
+
+  def handle_next(self, message):
+    """
+    Play next track or station - called by the playback control skill
+    """
+    self.log.log(20, "handle_next() - calling mpc_client.mpc_cmd(next)")
+    self.mpc_client.mpc_cmd("next")
 
   def CPS_start(self, phrase, data):
     """ 
@@ -99,19 +119,19 @@ class Mpc(CommonPlaySkill):
     self.log.log(20, "CPS_match_query_phrase() match_type = "+str(self.music_info.match_type))
     self.log.log(20, "CPS_match_query_phrase() mesg_file = "+self.music_info.mesg_file)
     self.log.log(20, "CPS_match_query_phrase() mesg_info = "+str(self.music_info.mesg_info))
-    self.log.log(20, "CPS_match_query_phrase() track_files = "+str(self.music_info.track_files))
+    self.log.log(20, "CPS_match_query_phrase() tracks_or_urls = "+str(self.music_info.tracks_or_urls))
 
     # speak the message
     self.CPS_extend_timeout(10)            # don't let speaking message cause a timeout
     self.log.log(20, "CPS_match_query_phrase() calling speak.dialog")  
     self.speak_dialog(self.music_info.mesg_file, self.music_info.mesg_info, wait=True) # speak the message  
 
-    if self.music_info.track_files == None: # no music was found
+    if self.music_info.tracks_or_urls == None: # no music was found
       return None
     if self.mpc_client.mpc_cmd("play") != True:
       self.log.error(20, "CPS_match_query_phrase() - self.mpc_client.mpc_cmd(play) failed")
     tracks_logged = 0
-    for track in self.music_info.track_files: # log first three tracks on the queue
+    for track in self.music_info.tracks_or_urls: # log first three tracks on the queue
       self.log.log(20, "CPS_match_query_phrase() track = "+str(track))
       tracks_logged = tracks_logged + 1
       if tracks_logged >= 3:
