@@ -3,7 +3,7 @@ from setuptools import setup
 import os
 from os import walk, path
 
-URL = "https://github.com/mike99mac/mpc-skill-mike99mac"
+URL = "https://github.com/mike99mac/ovos-skill-mpc-mike99mac"
 SKILL_CLAZZ = "Mpc"                        # needs to match __init__.py class name
 PYPI_NAME = "mpc-skill-mike99mac"          # pip install PYPI_NAME
 
