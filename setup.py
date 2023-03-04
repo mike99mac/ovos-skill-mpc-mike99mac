@@ -5,7 +5,7 @@ from os import walk, path
 
 URL = "https://github.com/mike99mac/ovos-skill-mpc-mike99mac"
 SKILL_CLAZZ = "Mpc"                        # needs to match __init__.py class name
-PYPI_NAME = "mpc-skill-mike99mac"          # pip install PYPI_NAME
+PYPI_NAME = "ovos-skill-mpc-mike99mac"     # pip install PYPI_NAME
 
 # below derived from github url to ensure standard skill_id
 SKILL_AUTHOR, SKILL_NAME = URL.split(".com/")[-1].split("/")
